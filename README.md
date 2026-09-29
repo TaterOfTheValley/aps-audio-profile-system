@@ -42,6 +42,10 @@ If you already run a standalone APS, **Exit** it from the tray before running
 shortcut once the installed copy opens. Both copies use the same profiles, so no export is
 needed. The installer is per-user and needs no administrator rights. It installs under
 `%LOCALAPPDATA%\APS-AudioProfileSystem`; profiles remain under `%LOCALAPPDATA%\APS`.
+Windows' Installed apps list and the installed shortcuts call it **APS — Audio Profile
+System**, with **TaterOfTheValley** as the publisher. The executable, shortcuts,
+installer, update dialog, and tray share the same speaker icon; the tray adds a lock
+badge while a profile is being watched.
 
 For manual standalone updates, put the EXE in a permanent folder as `APS.exe`. On each
 update, exit APS, replace that file with the newly downloaded version (renamed to
@@ -186,6 +190,11 @@ Output goes to `dist\`, which is gitignored — releases are built by CI, so a b
 the repo would only ever be a stale copy of one.
 
 `dist\APS.exe` cannot be overwritten while APS is running. Exit it from the tray first.
+
+The Windows icons are checked in under `src/Assets/` and embedded in the executable,
+so no icon files need to sit beside `APS.exe`. To edit the artwork, update
+`tools/generate_icon.py`, install Pillow (`python -m pip install Pillow`), and run
+`python tools/generate_icon.py` to regenerate both the plain and watching icons.
 
 ### Releasing
 
