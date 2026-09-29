@@ -8,6 +8,9 @@ name: Release
 #     stable tag: after v0.1.1 the next builds are 0.1.2-alpha.1, 0.1.2-alpha.2, ...
 #     They sort below 0.1.2, so the real 0.1.2 replaces them for everyone.
 on:
+  # Run by hand from the Actions tab to publish an alpha of main again, for instance
+  # after a run failed part-way.
+  workflow_dispatch:
   push:
     tags: ['v*']
     branches: [main]
