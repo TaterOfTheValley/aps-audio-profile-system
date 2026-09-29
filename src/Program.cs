@@ -302,8 +302,7 @@ internal static class Program
 
         if (Is(args, "--screenshot-icon"))
         {
-            // The tray icon is drawn in code, so the only way to know it reads at
-            // 16px — the size that actually matters — is to render it and look.
+            // Preview the embedded icon frames at tray sizes, including 16px.
             //
             // Two rows: plain, and the lock-badged variant shown
             // while a watched profile is in effect. The badge exists to make that

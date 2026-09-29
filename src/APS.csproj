@@ -8,6 +8,7 @@
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\aps.ico</ApplicationIcon>
     <RootNamespace>APS</RootNamespace>
     <AssemblyName>APS</AssemblyName>
     <PublishSingleFile>true</PublishSingleFile>
@@ -18,6 +19,7 @@
     <Product>APS — Audio Profile System</Product>
     <AssemblyTitle>APS — Audio Profile System</AssemblyTitle>
     <Description>Saved audio device profiles, held in place.</Description>
+    <Company>TaterOfTheValley</Company>
     <Authors>Patrick Filtz</Authors>
     <Copyright>Copyright (c) 2026 Patrick Filtz</Copyright>
 
@@ -39,6 +41,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Assets\aps.ico" LogicalName="APS.AppIcon.ico" />
+    <EmbeddedResource Include="Assets\aps-watching.ico" LogicalName="APS.AppIcon.Badged.ico" />
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
     <PackageReference Include="Velopack" Version="1.2.0" />
   </ItemGroup>

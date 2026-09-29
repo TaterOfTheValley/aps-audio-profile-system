@@ -30,3 +30,22 @@ jobs:
           -p:EnableCompressionInSingleFile=true
           -p:DebugType=none
           -o ${{ runner.temp }}/publish-smoke
+
+      - name: Smoke-test the installer package
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp THIRD-PARTY-NOTICES.md "${{ runner.temp }}/publish-smoke/"
+          dotnet tool install --tool-path "${{ runner.temp }}/vpk-tools" vpk --version 1.2.0
+          "${{ runner.temp }}/vpk-tools/vpk.exe" pack \
+            --packId APS-AudioProfileSystem \
+            --packTitle "APS — Audio Profile System" \
+            --packAuthors TaterOfTheValley \
+            --packVersion 0.1.0-alpha \
+            --packDir "${{ runner.temp }}/publish-smoke" \
+            --mainExe APS.exe \
+            --icon src/Assets/aps.ico \
+            --runtime win-x64 \
+            --noPortable true \
+            --releaseNotes RELEASE_NOTES.md \
+            --outputDir "${{ runner.temp }}/pack-smoke"

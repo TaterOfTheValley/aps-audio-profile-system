@@ -161,10 +161,12 @@ jobs:
           dotnet tool install --tool-path publish/tools vpk --version 1.2.0
           publish/tools/vpk.exe pack \
             --packId APS-AudioProfileSystem \
-            --packTitle "APS - Audio Profile System" \
+            --packTitle "APS — Audio Profile System" \
+            --packAuthors TaterOfTheValley \
             --packVersion "$VERSION" \
             --packDir publish/self-contained \
             --mainExe APS.exe \
+            --icon src/Assets/aps.ico \
             --runtime win-x64 \
             --noPortable true \
             --releaseNotes "$NOTES" \
@@ -194,7 +196,7 @@ jobs:
             --repoUrl "https://github.com/$GITHUB_REPOSITORY" \
             --outputDir publish/velopack \
             --tag "$TAG" \
-            --releaseName "APS - Audio Profile System $TAG" \
+            --releaseName "APS — Audio Profile System $TAG" \
             --publish --merge "${PRERELEASE[@]}" "${TARGET[@]}"
           gh release edit "$TAG" --notes-file "$NOTES"
           gh release upload "$TAG" assets/* --clobber
