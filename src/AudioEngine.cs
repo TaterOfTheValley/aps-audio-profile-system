@@ -89,16 +89,8 @@ public sealed class AudioDevice
 /// </summary>
 internal static class AudioEngine
 {
-    public static List<AudioDevice> GetDevices(Flow flow, bool includeInactive)
-    {
-        var enumerator = AudioInterop.Enumerator;
-        return GetDevices(enumerator, flow, includeInactive);
-    }
-
     /// <summary>
-    /// Overload taking an enumerator so a caller building a whole menu makes one
-    /// COM object rather than one per flow. DLS's tray does the same thing with
-    /// its display query for the same reason.
+    /// Reads one flow using the caller's enumerator, shared across device queries.
     /// </summary>
     public static List<AudioDevice> GetDevices(IMMDeviceEnumerator enumerator, Flow flow, bool includeInactive)
     {
@@ -185,24 +177,6 @@ internal static class AudioEngine
         catch
         {
             return "";
-        }
-    }
-
-    /// <summary>Looks up one endpoint by its exact id, whatever state it is in.</summary>
-    public static AudioDevice? GetById(IMMDeviceEnumerator enumerator, string endpointId, Flow flow)
-    {
-        if (string.IsNullOrWhiteSpace(endpointId)) return null;
-
-        try
-        {
-            if (enumerator.GetDevice(endpointId, out var device) != 0 || device == null) return null;
-
-            try { return Describe(device, flow); }
-            finally { AudioInterop.Release(device); }
-        }
-        catch
-        {
-            return null;
         }
     }
 

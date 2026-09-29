@@ -18,8 +18,6 @@ internal static class AppInfo
     /// <summary>Both together, for first-contact surfaces.</summary>
     public const string Branded = Name + " — " + FullName;
 
-    public const string Tagline = "Saved audio device profiles, held in place.";
-
     /// <summary>Identifies the single running instance. Includes the name so an older
     /// build under the previous name does not block a new one.</summary>
     public const string SingleInstanceMutex = "APS_AudioProfileSystem_SingleInstance";

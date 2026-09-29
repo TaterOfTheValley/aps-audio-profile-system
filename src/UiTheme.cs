@@ -84,25 +84,8 @@ internal static class UiTheme
     public static readonly Color Text = Color.FromArgb(245, 240, 230);
     public static readonly Color Ink = Color.FromArgb(14, 13, 11);
     public static readonly Color Danger = Color.FromArgb(232, 131, 117);
-    public static readonly Color Ok = Color.FromArgb(139, 213, 160);
 
-    public static Button MakeButton(string text, bool primary, float dpiScale = 1f)
-    {
-        var btn = new Button
-        {
-            Text = text,
-            Font = new Font("Segoe UI", 9.5f * dpiScale, primary ? FontStyle.Bold : FontStyle.Regular, GraphicsUnit.Pixel),
-            Height = (int)Math.Round(36 * dpiScale)
-        };
-        StyleButton(btn, primary);
-        return btn;
-    }
-
-    /// <summary>
-    /// The app's button look — gold for the one primary action, a bordered card for
-    /// the rest — applied to a button whose font and size are someone else's business.
-    /// Split from <see cref="MakeButton"/> for the dialogs WinForms lays out itself.
-    /// </summary>
+    /// <summary>Applies the app's button colors and borders, preserving font and size.</summary>
     public static void StyleButton(Button btn, bool primary)
     {
         btn.UseMnemonic = false;
@@ -153,13 +136,4 @@ internal static class UiTheme
         if (control.IsHandleCreated) Apply();
         control.HandleCreated += (_, _) => Apply();
     }
-
-    public static Label MakeEyebrow(string text, float dpiScale = 1f) => new()
-    {
-        Text = text,
-        ForeColor = Muted,
-        Font = new Font("Segoe UI", 8.5f * dpiScale, FontStyle.Bold, GraphicsUnit.Pixel),
-        AutoSize = false,
-        TextAlign = ContentAlignment.MiddleLeft
-    };
 }

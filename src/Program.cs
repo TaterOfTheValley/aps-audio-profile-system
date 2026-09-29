@@ -358,8 +358,7 @@ internal static class Program
                 var target = FindProfile(args, out string error);
                 if (target == null) { Console.WriteLine(error); Environment.ExitCode = 1; return; }
 
-                // Long enough for several polls: the guard looks every 30 seconds
-                // now, so a 60-second run could see one change and easily none.
+                // Allow time to change a default manually and observe several polls.
                 int seconds = IntArg(args, "--seconds", 180);
 
                 Console.WriteLine($"Applying '{target.Name}'...");

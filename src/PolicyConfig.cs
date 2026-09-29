@@ -212,21 +212,6 @@ internal static class PolicyConfig
         return false;
     }
 
-    /// <summary>
-    /// Sets every role a device claims, stopping at the first failure and naming
-    /// the role that failed. SetDefaultEndpoint does not cascade across roles.
-    /// </summary>
-    public static bool SetDefaultForRoles(string endpointId, IEnumerable<Role> roles, out string error)
-    {
-        foreach (var role in roles)
-        {
-            if (!SetDefault(endpointId, role, out error)) return false;
-        }
-
-        error = "";
-        return true;
-    }
-
     private static string Explain(int hr) => (uint)hr switch
     {
         0x80070490 => "Windows could not find that audio device — it may have been unplugged.",
