@@ -238,8 +238,7 @@ internal static class AudioInterop
     /// <summary>
     /// Verifies the marshalled struct sizes before anything relies on them.
     ///
-    /// This is the audio counterpart to DLS's CcdNative.AssertLayout: a size
-    /// mismatch here corrupts memory rather than returning an error, so it is
+    /// A size mismatch here corrupts memory rather than returning an error, so it is
     /// worth failing loudly at preflight instead of misbehaving quietly for the
     /// life of the process.
     /// </summary>
@@ -275,8 +274,7 @@ internal static class AudioInterop
     ///
     /// <para>Per <i>thread</i> rather than per process, because a COM object
     /// belongs to the apartment it was created in. APS does all its audio work on
-    /// the one STA thread, so in practice this is one object; DeviceWatcher's MTA
-    /// thread deliberately keeps its own and does not touch this.</para>
+    /// the one STA thread, so in practice this is one object.</para>
     /// </summary>
     public static IMMDeviceEnumerator Enumerator => _threadEnumerator ??= CreateEnumerator();
 

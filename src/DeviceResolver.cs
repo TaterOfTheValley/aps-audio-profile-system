@@ -132,19 +132,7 @@ internal static class DeviceResolver
         return true;
     }
 
-    /// <summary>
-    /// Resolves every reference in a profile against one enumeration.
-    ///
-    /// Both flows are gathered because a profile spans outputs and inputs, and
-    /// only active devices are considered — an inactive endpoint cannot be made
-    /// a default, so offering it would only produce a failure later.
-    /// </summary>
-    public static Dictionary<DeviceRef, Resolution> ResolveProfile(AudioProfile profile)
-    {
-        var live = AudioEngine.GetAllDevices(includeInactive: false);
-        return ResolveProfile(profile, live);
-    }
-
+    /// <summary>Resolves every reference against the caller's active-device enumeration.</summary>
     public static Dictionary<DeviceRef, Resolution> ResolveProfile(
         AudioProfile profile, IReadOnlyList<AudioDevice> live)
     {

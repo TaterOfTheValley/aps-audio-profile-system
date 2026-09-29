@@ -47,16 +47,6 @@ internal static class AudioSafety
         return true;
     }
 
-    /// <summary>Accepts the current configuration: drops the snapshot so the undo
-    /// affordance disappears.</summary>
-    public static void Confirm()
-    {
-        if (_snapshot == null) return;
-        _snapshot = null;
-        _expiresUtc = DateTime.MinValue;
-        UndoStateChanged?.Invoke(null, EventArgs.Empty);
-    }
-
     public static bool Undo(out string message)
     {
         if (!CanUndo || _snapshot == null)
