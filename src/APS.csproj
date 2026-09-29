@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RootNamespace>APS</RootNamespace>
+    <AssemblyName>APS</AssemblyName>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+
+    <!-- Shows up in the .exe's Windows Properties dialog — the one place a stranger
+         who only has the download, not the README, sees what APS stands for. -->
+    <Product>APS — Audio Profile System</Product>
+    <AssemblyTitle>APS — Audio Profile System</AssemblyTitle>
+    <Description>Saved audio device profiles, held in place.</Description>
+    <Authors>Patrick Filtz</Authors>
+    <Copyright>Copyright (c) 2026 Patrick Filtz</Copyright>
+
+    <!-- Semantic versioning. Version carries the pre-release tag and becomes
+         InformationalVersion; AssemblyVersion stays numeric because Windows and the
+         CLR reject anything else.
+
+         These are the LOCAL-BUILD defaults only. A release takes its version from the
+         git tag: .github/workflows/release.yml passes -p:Version / -p:AssemblyVersion
+         / -p:FileVersion derived from `vX.Y.Z[-prerelease]`, overriding all three. So
+         the tag is the thing to bump, not this file. -->
+    <Version>0.1.0-alpha</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+
+    <!-- .NET appends "+<git sha>" to InformationalVersion by default, which is noise
+         in a UI string. -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="Velopack" Version="1.2.0" />
+  </ItemGroup>
+
+</Project>

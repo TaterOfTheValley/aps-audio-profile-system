@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build
+        run: dotnet build src/APS.csproj -c Release --nologo
+
+      # Release day is a bad time to discover that publishing is broken, so CI
+      # exercises the same single-file publish the release workflow runs. The
+      # output is thrown away; only the exit code matters.
+      - name: Smoke-test the release publish
+        run: >
+          dotnet publish src/APS.csproj -c Release -r win-x64 --nologo
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:EnableCompressionInSingleFile=true
+          -p:DebugType=none
+          -o ${{ runner.temp }}/publish-smoke

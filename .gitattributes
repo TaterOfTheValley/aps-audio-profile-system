@@ -1,0 +1,5 @@
+# Auto-detect text files and normalize line endings on checkout.
+* text=auto
+
+# Windows-only scripts: always CRLF regardless of the checkout platform.
+*.cmd text eol=crlf

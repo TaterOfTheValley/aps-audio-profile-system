@@ -1,0 +1,197 @@
+name: Release
+
+# Two ways in:
+#
+#   - Push a tag vMAJOR.MINOR.PATCH[-prerelease] and that exact version is released.
+#     This is how a stable release is made.
+#   - Push to main and an alpha is released automatically, numbered off the last
+#     stable tag: after v0.1.1 the next builds are 0.1.2-alpha.1, 0.1.2-alpha.2, ...
+#     They sort below 0.1.2, so the real 0.1.2 replaces them for everyone.
+on:
+  push:
+    tags: ['v*']
+    branches: [main]
+    # Nothing in these changes what ships, so they do not earn an alpha. Path filters
+    # are not applied to tag pushes, so a stable release is never skipped by them.
+    paths-ignore:
+      - '**.md'
+      - LICENSE
+      - .gitignore
+      - .gitattributes
+      - .github/workflows/ci.yml
+
+# vpk creates the release, and with it the tag. Nothing else here needs a token.
+permissions:
+  contents: write
+
+# One run per ref. A newer push to main replaces an older one still waiting, which is
+# what an alpha wants; a tag has its own group, so a stable release is never the one
+# that gets replaced.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      # Full history and tags: an alpha's number is a count of commits since the last
+      # stable tag.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # The tag is the single source of truth for a stable version, and the last
+      # stable tag for an alpha's. APS.csproj carries a default for local builds;
+      # every number below overrides it.
+      #
+      # AssemblyVersion and FileVersion must be strictly numeric — the CLR and the
+      # Win32 version resource both reject a "-alpha" suffix — so they get the version
+      # with any pre-release tail stripped. Version keeps the full string and
+      # becomes InformationalVersion, which is what AppInfo.Version reads.
+      - name: Derive version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            TAG="$GITHUB_REF_NAME"
+            VERSION="${TAG#v}"
+            NOTES=RELEASE_NOTES.md
+          else
+            LAST=$(git describe --tags --abbrev=0 --match 'v[0-9]*' --exclude '*-*' HEAD 2>/dev/null || true)
+            if [[ -z "$LAST" ]]; then BASE=0.0.0; RANGE=HEAD; else BASE="${LAST#v}"; RANGE="$LAST..HEAD"; fi
+
+            COUNT=$(git rev-list --count "$RANGE")
+            if [[ "$COUNT" == 0 ]]; then
+              # This commit is the stable release itself, and the tag's own run is
+              # publishing it. An alpha on top would be a duplicate of it.
+              echo "HEAD is $LAST; nothing to release as an alpha."
+              echo "SKIP=true" >> "$GITHUB_ENV"
+              exit 0
+            fi
+
+            IFS=. read -r MAJOR MINOR PATCH <<< "$BASE"
+            VERSION="$MAJOR.$MINOR.$((PATCH + 1))-alpha.$COUNT"
+            TAG="v$VERSION"
+
+            # What the in-app update dialog shows for an alpha: the commits in it.
+            NOTES=alpha-notes.md
+            {
+              echo "# APS $VERSION"
+              echo
+              echo "An automatic alpha build. Changes since ${LAST:-the start}:"
+              echo
+              git log --no-merges --format='- %s' "$RANGE"
+            } > "$NOTES"
+          fi
+
+          NUMERIC="${VERSION%%-*}"
+          if [[ ! "$NUMERIC" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag '$TAG' is not vMAJOR.MINOR.PATCH[-prerelease]" >&2
+            exit 1
+          fi
+
+          echo "VERSION=$VERSION"     >> "$GITHUB_ENV"
+          echo "NUMERIC=$NUMERIC.0"   >> "$GITHUB_ENV"
+          echo "TAG=$TAG"             >> "$GITHUB_ENV"
+          echo "NOTES=$NOTES"         >> "$GITHUB_ENV"
+          echo "Releasing $TAG"
+
+      - name: Publish (self-contained)
+        if: env.SKIP != 'true'
+        run: >
+          dotnet publish src/APS.csproj -c Release -r win-x64 --nologo
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:EnableCompressionInSingleFile=true
+          -p:DebugType=none
+          -p:Version=${{ env.VERSION }}
+          -p:AssemblyVersion=${{ env.NUMERIC }}
+          -p:FileVersion=${{ env.NUMERIC }}
+          -o publish/self-contained
+
+      - name: Publish (framework-dependent)
+        if: env.SKIP != 'true'
+        run: >
+          dotnet publish src/APS.csproj -c Release -r win-x64 --nologo
+          --self-contained false
+          -p:PublishSingleFile=true
+          -p:DebugType=none
+          -p:Version=${{ env.VERSION }}
+          -p:AssemblyVersion=${{ env.NUMERIC }}
+          -p:FileVersion=${{ env.NUMERIC }}
+          -o publish/framework-dependent
+
+      # Asset names carry the version so downloads do not collide in a Downloads
+      # folder, and say plainly which one needs a runtime installed.
+      #
+      # THIRD-PARTY-NOTICES.md ships with every release because the self-contained exe
+      # redistributes the MIT-licensed .NET runtime, and MIT requires its notice to
+      # travel with the binary. This is required regardless of how APS is licensed.
+      - name: Stage assets
+        if: env.SKIP != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets
+          cp publish/self-contained/APS.exe \
+             "assets/APS-${VERSION}-win-x64.exe"
+          cp publish/framework-dependent/APS.exe \
+             "assets/APS-${VERSION}-win-x64-requires-dotnet8.exe"
+          cp THIRD-PARTY-NOTICES.md assets/
+          (cd assets && sha256sum APS-*.exe THIRD-PARTY-NOTICES.md > SHA256SUMS.txt)
+          ls -la assets
+
+      # Installed copies update from this repository's public releases. The
+      # self-contained build is what gets packed: the installer bundles the runtime.
+      - name: Pack installable update
+        if: env.SKIP != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp THIRD-PARTY-NOTICES.md publish/self-contained/
+          dotnet tool install --tool-path publish/tools vpk --version 1.2.0
+          publish/tools/vpk.exe pack \
+            --packId APS-AudioProfileSystem \
+            --packTitle "APS - Audio Profile System" \
+            --packVersion "$VERSION" \
+            --packDir publish/self-contained \
+            --mainExe APS.exe \
+            --runtime win-x64 \
+            --noPortable true \
+            --releaseNotes "$NOTES" \
+            --outputDir publish/velopack
+
+      # One release contains the installer, Velopack update packages, and both
+      # standalone downloads. Anything with a pre-release tail is published as a
+      # pre-release, so an alpha never becomes the "Latest" download by accident.
+      # Do not `gh release create` first: vpk creates the release itself.
+      #
+      # A branch build has no tag yet, so the release is pointed at the commit and
+      # GitHub creates the tag there. Tags made with the workflow's token do not start
+      # another run, so this cannot loop.
+      - name: Publish release
+        if: env.SKIP != 'true'
+        shell: bash
+        env:
+          VPK_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PRERELEASE=()
+          if [[ "$VERSION" == *-* ]]; then PRERELEASE=(--pre); fi
+          TARGET=()
+          if [[ "$GITHUB_REF_TYPE" != "tag" ]]; then TARGET=(--targetCommitish "$GITHUB_SHA"); fi
+          publish/tools/vpk.exe upload github \
+            --repoUrl "https://github.com/$GITHUB_REPOSITORY" \
+            --outputDir publish/velopack \
+            --tag "$TAG" \
+            --releaseName "APS - Audio Profile System $TAG" \
+            --publish --merge "${PRERELEASE[@]}" "${TARGET[@]}"
+          gh release edit "$TAG" --notes-file "$NOTES"
+          gh release upload "$TAG" assets/* --clobber
